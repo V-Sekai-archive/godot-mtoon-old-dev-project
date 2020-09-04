@@ -19,7 +19,7 @@ realtime Omni and Spot lights, which are not compatible due to different falloff
 curves. However, directional lights and ambient should look the same.)
 ![](docs/alicia_realtime_lights.png)
 
-NOTE: This shader ONLY supports Godot 3.2.2 or later!
+NOTE: This shader ONLY supports Godot 3.2.2 or later, and only GLES3!
 
 This shader will not work in Godot versions 3.2.1 or earlier; or master / 4.0.
 
@@ -27,6 +27,12 @@ This shader will not work in Godot versions 3.2.1 or earlier; or master / 4.0.
 
 **NOTE: IMPORTING THIS SHADER WILL MODIFY YOUR PROJECT AND MAY INFECT OTHER .tres
 OR .tscn ASSETS WHICH CONTAIN SHADERS. MAKE A BACKUP BEFORE IMPORTING.**
+
+This shader will globally override the *maximum number of bones* allowed on a model.
+Additionally, it will override the *maximum number of realtime lights* in a scene.
+The numbers chosen are at the top of the `custom_defines` section, but they are
+hardware dependent, so avoid making these too high. This is again due to unintended
+use of a Godot feature, and mixing up global constants with per-shader defines.
 
 This is due to a Godot bug (TODO: file bug) which causes `custom_defines` to modify the
 global `spatial` or `canvas_item` shader objects in the engine, which are copied to newly
@@ -102,8 +108,9 @@ You can uncomment it if you desire the original (clamped directional light) beha
 
 - Port this shader to Godot 4.0
 - File PRs and issues against Godot 4.0 so that this can be done without GLSL macros.
+- Test all baked lighting / voxel GI variants in Godot.
 
-Unsupported features/Bugs:
+## Unsupported features/Bugs:
 
 - Outlines in ScreenCoordinates mode. The screen pixel calculations seem resolution
 dependent and I had difficulty ascertaining the intent of the original code.
@@ -112,4 +119,3 @@ dependent and I had difficulty ascertaining the intent of the original code.
   due to a limitation in Godot. To compare, I suggest adding `[HDR][GAMMA]` in the Unity
   shader, or else remove `[HDR]` which also puts the colors into Gamma mode.
   In practice, a Gamma conversion calculator must be used when convering colors.
-- I have not tested all baked lighting / voxel GI variants in Godot.
