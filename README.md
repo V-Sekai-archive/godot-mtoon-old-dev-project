@@ -5,27 +5,31 @@ Based off the original MToon by Santarh at:
 
 https://github.com/Santarh/MToon/tree/master/MToon/Resources/Shaders
 
+Provided under the MIT License (see `LICENSE`)
+
 ## Versions:
 
-### godot_3.2
+### godot-3.2
 
-This version uses special GLSL macros defined in custom_defines* to provide
-the exact information needed to replicate the MToon look from Unity.
+This version uses special GLSL macros defined in `custom_defines` (see DANGER below)
+to provide the exact information needed to replicate the MToon look from Unity.
 
-This shader should look identical to MToon in Unity.
+This shader should look identical to MToon in Unity. (NOTE: this test scene uses
+realtime Omni and Spot lights, which are not compatible due to different falloff
+curves. However, directional lights and ambient should look the same.)
 ![](docs/alicia_realtime_lights.png)
 
 NOTE: This shader ONLY supports Godot 3.2.2 or later!
 
-This shader will not work in Godot versions 3.2.1 or earlier; or based on master / 4.0.
+This shader will not work in Godot versions 3.2.1 or earlier; or master / 4.0.
 
 #### DANGER: Project corruption godot bug
 
 **NOTE: IMPORTING THIS SHADER WILL MODIFY YOUR PROJECT AND MAY INFECT OTHER .tres
 OR .tscn ASSETS WHICH CONTAIN SHADERS. MAKE A BACKUP BEFORE IMPORTING.**
 
-This is due to a Godot bug (TODO: file bug) which causes custom_defines to modify the
-global spatial or canvas_item shader objects in the engine, which are copied to newly
+This is due to a Godot bug (TODO: file bug) which causes `custom_defines` to modify the
+global `spatial` or `canvas_item` shader objects in the engine, which are copied to newly
 created shader resources.
 
 If something goes wrong, be prepared to search all project assets within `.tres` or
@@ -108,3 +112,4 @@ dependent and I had difficulty ascertaining the intent of the original code.
   due to a limitation in Godot. To compare, I suggest adding `[HDR][GAMMA]` in the Unity
   shader, or else remove `[HDR]` which also puts the colors into Gamma mode.
   In practice, a Gamma conversion calculator must be used when convering colors.
+- I have not tested all baked lighting / voxel GI variants in Godot.
