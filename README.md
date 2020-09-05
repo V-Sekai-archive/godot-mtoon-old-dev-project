@@ -9,7 +9,7 @@ Provided under the MIT License (see `LICENSE`)
 
 ## Versions:
 
-### godot-3.2
+### Godot-MToon-Shader (For Godot 3.2.2 - 4.0 ONLY)
 
 This version uses special GLSL macros defined in `custom_defines` (see DANGER below)
 to provide the exact information needed to replicate the MToon look from Unity.
@@ -52,7 +52,9 @@ to use in a production project.
 
 You must use grep or another program to find all assets with `custom_defines`.
 
-### compat
+### MToonCompat-For-Godot-Master
+
+**(Compatible with all Godot versions, but with incorrect ambient and directional lighting)**
 
 This shader uses the same naming as MToon, and it should work in all versions of Godot.
 However, proper toon shading is not possible without use of GLSL macros.
