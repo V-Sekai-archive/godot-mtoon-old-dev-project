@@ -7,6 +7,12 @@ https://github.com/Santarh/MToon/tree/master/MToon/Resources/Shaders
 
 Provided under the MIT License (see `LICENSE`)
 
+The project opens the "compat" shader for 4.0 compatibility, but this shader
+will not look correct. It's just to provide some simple shading with
+compatible naming.
+
+If you are in 3.2.x, please open the Alicia/Alicia.tscn to get the full shader.
+
 ## Versions:
 
 ### Godot-MToon-Shader (For Godot 3.2.2 - 4.0 ONLY)
@@ -120,4 +126,4 @@ dependent and I had difficulty ascertaining the intent of the original code.
   using the Raw checkbox, but these colors will be **GAMMA CORRECTED** even in raw mode,
   due to a limitation in Godot. To compare, I suggest adding `[HDR][GAMMA]` in the Unity
   shader, or else remove `[HDR]` which also puts the colors into Gamma mode.
-  In practice, a Gamma conversion calculator must be used when convering colors.
+  In practice, a Gamma conversion calculator must be used when converting colors.
