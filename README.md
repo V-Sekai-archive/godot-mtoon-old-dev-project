@@ -15,7 +15,7 @@ If you are in 3.2.x, please open the Alicia/Alicia.tscn to get the full shader.
 
 ## Versions:
 
-### Godot-MToon-Shader (For Godot 3.2.2 - 4.0 ONLY)
+### Godot-MToon-Shader (For Godot 3.2.2 - 3.2.x ONLY)
 
 This version uses special GLSL macros defined in `custom_defines` (see DANGER below)
 to provide the exact information needed to replicate the MToon look from Unity.
@@ -58,7 +58,7 @@ to use in a production project.
 
 You must use grep or another program to find all assets with `custom_defines`.
 
-### MToonCompat-For-Godot-Master
+### MToonCompat-For-Godot-Master (For any Godot version)
 
 **(Compatible with all Godot versions, but with incorrect ambient and directional lighting)**
 
