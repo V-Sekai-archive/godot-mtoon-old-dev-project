@@ -577,11 +577,14 @@ void light() {
 custom_defines = "
 /* These constants must be set by the use when using custom_defines */
 /* The following values are safe values within the gl4 spec */
+#ifndef MAX_LIGHT_DATA_STRUCTS
 #define MAX_LIGHT_DATA_STRUCTS 100 /* 409 on nvidia. 16384/160 */
 #define MAX_FORWARD_LIGHTS 8
 #define MAX_REFLECTION_DATA_STRUCTS 112 /* 455 on nvidia. max allowed 1024 */
 #define MAX_SKELETON_BONES 512 /* safe 340. 1365 on nvidia. max allowed 2048 */
+#endif
 
+#ifndef m_LM_SCENEDATA_FLOAT
 #define m_LM_SCENEDATA_FLOAT(arg) mx_LM_SCENEDATA_FLOAT(arg ## x)
 #define m_LM_SCENEDATA_VEC2(arg) mx_LM_SCENEDATA_VEC2(arg ## x)
 #define m_LM_SCENEDATA_VEC3(arg) mx_LM_SCENEDATA_VEC3(arg ## x)
@@ -966,5 +969,6 @@ vec3 get_splane(mat4 shadow_matrix, vec3 vertex) {
 #define m_dir_shadow_which_matrix_dsLIGHT_USE_PSSM2 (light_depth_z < shadow_split_offsets.y ? ((light_depth_z < shadow_split_offsets.x) ? 1.0 : 2.0) : ((light_depth_z < shadow_split_offsets.z) ? 3.0 : 4.0))
 #define m_dir_shadow_which_matrix_dsLIGHT_USE_PSSM4 ((light_depth_z < shadow_split_offsets.x) ? 1.0 : 2.0)
 #define m_dir_shadow_which_matrix_ds m_dir_shadow_which_matrix_dsLIGHT_USE_PSSM4
+#endif
 
 "
