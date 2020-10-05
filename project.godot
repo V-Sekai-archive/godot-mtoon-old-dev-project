@@ -10,20 +10,19 @@ config_version=4
 
 _global_script_classes=[  ]
 _global_script_class_icons={
-
 }
 
 [application]
 
 config/name="ShaderTest"
-run/main_scene="res://AliciaCompat/AliciaCompat.tscn"
+run/main_scene="res://Alicia/Alicia.tscn"
 
 [editor_plugins]
 
-enabled=PoolStringArray(  )
+enabled=PackedStringArray(  )
 
 [rendering]
 
+environment/default_environment="res://default_env.tres"
 quality/filters/anisotropic_filter_level=1
 quality/filters/msaa=2
-environment/default_environment="res://default_env.tres"

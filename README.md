@@ -11,21 +11,50 @@ The project opens the "compat" shader for 4.0 compatibility, but this shader
 will not look correct. It's just to provide some simple shading with
 compatible naming.
 
-If you are in 3.2.x, please open the Alicia/Alicia.tscn to get the full shader.
+If you have the NPR lighting patch applied to Godot master (vulkan),
+then please open the Alicia/Alicia.tscn to get the full shader.
+
+Otherwise, open Alicia/AliciaCompat.tscn for the "compatible" version.
 
 ## Versions:
 
-### Godot-MToon-Shader (For Godot 3.2.2 - 3.2.x ONLY)
+### Godot-MToon-Shader Alicia.tscn (For Godot master with proposed shader language features)
 
-This version uses special GLSL macros defined in `custom_defines` (see DANGER below)
-to provide the exact information needed to replicate the MToon look from Unity.
+**(Requires adding shader language extensions to expose lighting information in fragment)**
+
+This should be fully compatbile with MToon and implement proper ambient lighting.
 
 This shader should look identical to MToon in Unity. (NOTE: this test scene uses
 realtime Omni and Spot lights, which are not compatible due to different falloff
 curves. However, directional lights and ambient should look the same.)
 ![](docs/alicia_realtime_lights.png)
 
-NOTE: This shader ONLY supports Godot 3.2.2 or later, and only GLES3!
+### MToonCompat-For-Godot-Master AliciaCompat.tscn (For any Godot version)
+
+**(Compatible with all Godot versions, but with incorrect ambient and directional lighting)**
+
+This shader uses the same naming as MToon, and it should work in all versions of Godot.
+However, proper toon shading is not possible without use of GLSL macros.
+
+The compat shader may provide a PBR look:
+![](docs/alicia_compat.png)
+
+While not the intent of MToon, this version exists to allow for compatibility
+across all Godot versions, while still using the same MToon shader params so that
+import and assets will be compatible.
+
+Note about shadows: The compat shader has ommitted multiplying with
+`length(SHADOW_ATTENUATION)/sqrt(3)` which is required to get shadow support in Godot 4.
+I have omitted this variable for 3.2 compatability.
+
+This version will be needed until proper NPR support is implemented in Godot.
+
+### DEPRECATED branch old-3.2-hack Alicia.tscn (NVIDIA ONLY; For Godot 3.2.2 - 3.2.x ONLY)
+
+This version uses special GLSL macros defined in `custom_defines` (see DANGER below)
+to provide the exact information needed to replicate the MToon look from Unity.
+
+NOTE: This shader ONLY supports Godot 3.2.2 or later, and only GLES3, and not AMD due to poor preprocessor support!
 
 This shader will not work in Godot versions 3.2.1 or earlier; or master / 4.0.
 
@@ -57,22 +86,6 @@ to use in a production project.
 **TO UNINSTALL THIS SHADER, YOU MUST REMOVE `custom_defines` FROM ALL ASSETS IN YOUR PROJECT**
 
 You must use grep or another program to find all assets with `custom_defines`.
-
-### MToonCompat-For-Godot-Master (For any Godot version)
-
-**(Compatible with all Godot versions, but with incorrect ambient and directional lighting)**
-
-This shader uses the same naming as MToon, and it should work in all versions of Godot.
-However, proper toon shading is not possible without use of GLSL macros.
-
-The compat shader may provide a PBR look:
-![](docs/alicia_compat.png)
-
-While not the intent of MToon, this version exists to allow for compatibility
-across all Godot versions, while still using the same MToon shader params so that
-import and assets will be compatible.
-
-This version will be needed until proper NPR support is implemented in Godot.
 
 ## Notes on usage:
 

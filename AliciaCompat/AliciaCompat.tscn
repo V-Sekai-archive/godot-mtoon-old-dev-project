@@ -1,57 +1,62 @@
-[gd_scene load_steps=8 format=2]
+[gd_scene load_steps=5 format=2]
 
 [ext_resource path="res://AliciaCompat/AliciaSolid_vrm-0.51.glb" type="PackedScene" id=1]
-[ext_resource path="res://unity_skybox.exr" type="Texture" id=2]
 
-[sub_resource type="PanoramaSky" id=1]
-panorama = ExtResource( 2 )
+[sub_resource type="CylinderMesh" id=1]
 
-[sub_resource type="Environment" id=2]
-background_mode = 2
-background_sky = SubResource( 1 )
-
-[sub_resource type="CylinderMesh" id=3]
-
-[sub_resource type="SpatialMaterial" id=4]
-flags_transparent = true
-params_blend_mode = 1
+[sub_resource type="StandardMaterial3D" id=2]
+transparency = 1
+blend_mode = 1
 albedo_color = Color( 1, 1, 1, 0 )
 roughness = 0.0
 
-[sub_resource type="CubeMesh" id=5]
+[sub_resource type="CubeMesh" id=3]
 
-[node name="Spatial" type="Spatial"]
+[node name="Spatial" type="Node3D"]
+script = null
 
-[node name="DirectionalLight" type="DirectionalLight" parent="."]
+[node name="DirectionalLight" type="DirectionalLight3D" parent="."]
 transform = Transform( 1, -5.7545e-07, -2.09447e-07, -2.09447e-07, -0.642788, 0.766044, -5.7545e-07, -0.766044, -0.642788, 0, 3, 0 )
 light_color = Color( 1, 0.956863, 0.839216, 1 )
 shadow_bias = 0.0
+script = null
 
 [node name="AliciaSolid_vrm-051" parent="." instance=ExtResource( 1 )]
 transform = Transform( -1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 0, 0, 0 )
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource( 2 )
-
-[node name="Camera" type="Camera" parent="."]
+[node name="Camera" type="Camera3D" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 1.5 )
+fov = 60.0
+script = null
 
-[node name="Camera2" type="Camera" parent="."]
+[node name="Camera2" type="Camera3D" parent="."]
 transform = Transform( 0.949725, -0.023771, 0.312182, 0, 0.997114, 0.075925, -0.313085, -0.0721078, 0.946984, 0.105562, 1.37625, 0.130392 )
+script = null
 
-[node name="MeshInstance" type="MeshInstance" parent="."]
+[node name="MeshInstance" type="MeshInstance3D" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0246786, 1.43094, 1.86018 )
 visible = false
-mesh = SubResource( 3 )
-material/0 = SubResource( 4 )
+mesh = SubResource( 1 )
+material/0 = SubResource( 2 )
+script = null
 
-[node name="MeshInstance2" type="MeshInstance" parent="."]
+[node name="MeshInstance2" type="MeshInstance3D" parent="."]
 visible = false
 extra_cull_margin = 16384.0
-mesh = SubResource( 5 )
+mesh = SubResource( 3 )
 material/0 = null
+script = null
 
-[node name="OmniLight" type="OmniLight" parent="."]
+[node name="OmniLight" type="OmniLight3D" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.25, 0, 0.5 )
+light_color = Color( 0.968627, 1, 0, 1 )
+light_energy = 5.0
+omni_range = 1.0
+omni_attenuation = 0.75
+omni_shadow_mode = 0
+script = null
+
+[node name="OmniLight (1)" type="OmniLight3D" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -1, -1, 0.5 )
 visible = false
 light_color = Color( 0.968627, 1, 0, 1 )
@@ -59,14 +64,15 @@ light_energy = 3.0
 omni_range = 3.0
 omni_attenuation = 0.75
 omni_shadow_mode = 0
+script = null
 
-[node name="SpotLight" type="SpotLight" parent="."]
+[node name="SpotLight" type="SpotLight3D" parent="."]
 transform = Transform( -1.62921e-07, 0, -1, 0, 1, 0, 1, 0, -1.62921e-07, -2, 0, 0 )
-visible = false
 light_color = Color( 1, 0, 0, 1 )
 light_energy = 5.0
 spot_range = 3.0
 spot_attenuation = 0.75
 spot_angle_attenuation = 10.0
+script = null
 
 [editable path="AliciaSolid_vrm-051"]

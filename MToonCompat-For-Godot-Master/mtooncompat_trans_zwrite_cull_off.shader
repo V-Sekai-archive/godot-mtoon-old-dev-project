@@ -9,25 +9,25 @@ const float isOutline = 0.0;
 // // Comment `const float isOutline = 0.0;`
 // render_mode cull_front;
 // const float isOutline = 1.0;
-// // Uncomment `ALPHA = alpha;` and comment `if (alpha < _Cutoff) { discard; }` at end of fragment()
+// // Uncomment `ALPHA = alpha;` and comment `ALPHA_SCISSOR = _Cutoff` at end of fragment()
 
 // TRANSPARENT:
-// // Uncomment `ALPHA = alpha;` and comment `if (alpha < _Cutoff) { discard; }` at end of fragment()
+// // Uncomment `ALPHA = alpha;` and comment `ALPHA_SCISSOR = _Cutoff` at end of fragment()
 
 // TRANSPARENT_WITH_ZWRITE:
 //render_mode depth_draw_always;
-// // Uncomment `ALPHA = alpha;` and comment `if (alpha < _Cutoff) { discard; }` at end of fragment()
+// // Uncomment `ALPHA = alpha;` and comment `ALPHA_SCISSOR = _Cutoff` at end of fragment()
 
 // CULL_OFF:
 // render_mode cull_disabled;
 
 // TRANSPARENT_CULL_OFF:
 // render_mode cull_disabled;
-// // Uncomment `ALPHA = alpha;` and comment `if (alpha < _Cutoff) { discard; }` at end of fragment()
+// // Uncomment `ALPHA = alpha;` and comment `ALPHA_SCISSOR = _Cutoff` at end of fragment()
 
 // TRANSPARENT_WITH_ZWRITE_CULL_OFF:
 render_mode cull_disabled,depth_draw_always;
-// Uncomment `ALPHA = alpha;` and comment `if (alpha < _Cutoff) { discard; }` at end of fragment()
+// Uncomment `ALPHA = alpha;` and comment `ALPHA_SCISSOR = _Cutoff` at end of fragment()
 
 
 const bool CALCULATE_LIGHTING_IN_FRAGMENT = true;
@@ -180,7 +180,7 @@ vec3 calculateAddLighting(vec2 mainUv, float dotNL, float dotNV, float shadowAtt
 }
 
 void fragment() {
-	bool _NORMALMAP = true; // textureSize(texture_normal, 0).x > 8;
+	bool _NORMALMAP = true;//textureSize(texture_normal, 0).x > 8;
 	bool MTOON_OUTLINE_COLOR_FIXED = _OutlineMixedLighting == 0.0;
 	bool MTOON_OUTLINE_COLOR_MIXED = _OutlineMixedLighting == 1.0;
 
@@ -278,7 +278,7 @@ void fragment() {
 	ROUGHNESS = 0.0;
 	METALLIC = 0.0;
 	ALPHA = alpha;
-	// if (alpha < _Cutoff) { discard; }
+	//ALPHA_SCISSOR = _Cutoff;
 
 	//METALLIC = metallic;
 	//ROUGHNESS = roughness;
@@ -313,7 +313,7 @@ void light() {
 	float addTmp;
 	vec3 addLighting = calculateLighting(mainUv, addDotNL, 1.0, shade, lit, LIGHT_COLOR, addCol, addTmp);
 	// addLighting *= step(0, addDotNL); // darken if transparent. Because Unity's transparent material can't receive shadowAttenuation.
-	DIFFUSE_LIGHT += calculateAddLighting(mainUv, addDotNL, dot(NORMAL, VIEW), length(ATTENUATION)/length(vec3(1.0)), addLighting, addCol);
+	DIFFUSE_LIGHT += calculateAddLighting(mainUv, addDotNL, dot(NORMAL, VIEW), ATTENUATION, addLighting, addCol);
 
     SPECULAR_LIGHT = vec3(0.0);
 }
