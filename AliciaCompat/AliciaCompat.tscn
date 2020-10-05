@@ -18,7 +18,8 @@ script = null
 [node name="DirectionalLight" type="DirectionalLight3D" parent="."]
 transform = Transform( 1, -5.7545e-07, -2.09447e-07, -2.09447e-07, -0.642788, 0.766044, -5.7545e-07, -0.766044, -0.642788, 0, 3, 0 )
 light_color = Color( 1, 0.956863, 0.839216, 1 )
-shadow_bias = 0.0
+shadow_normal_bias = 0.4
+directional_shadow_max_distance = 3.2
 script = null
 
 [node name="AliciaSolid_vrm-051" parent="." instance=ExtResource( 1 )]
