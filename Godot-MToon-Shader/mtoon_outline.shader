@@ -6,10 +6,10 @@ render_mode specular_disabled,ambient_light_disabled;
 // const float isOutline = 0.0;
 
 // OUTLINE:
-// // Comment `const float isOutline = 0.0;`
+// Comment `const float isOutline = 0.0;`
 render_mode cull_front;
 const float isOutline = 1.0;
-// // Uncomment `ALPHA = alpha;` and comment `if (alpha < _Cutoff) { discard; }` at end of fragment()
+// Uncomment `ALPHA = alpha;` and comment `if (alpha < _Cutoff) { discard; }` at end of fragment()
 
 // TRANSPARENT:
 // // Uncomment `ALPHA = alpha;` and comment `if (alpha < _Cutoff) { discard; }` at end of fragment()
@@ -215,11 +215,38 @@ void fragment() {
     vec4 DEBUG_OVERRIDE = vec4(0.0);
     // alpha
 	float alpha = albedo.a * mainTex.a;
- 
+     // Albedo color
+    vec4 shade = texture(_ShadeTexture, mainUv);
+    vec4 lit = mainTex;
+    vec3 emission = texture(_EmissionMap, mainUv).rgb * _EmissionColor.rgb;
+
+	vec3 tangentNormal = vec3(0.0,0.0,1.0);
+	if (_NORMALMAP) {
+	    vec3 tangentNormal = UnpackScaleNormal(texture(texture_normal, mainUv), normal_scale);
+	}
+
+	for (uint i = uint(0); i < DECAL_COUNT(CLUSTER_CELL); i++) {
+		vec3 decal_emission;
+		vec4 decal_albedo;
+		vec4 decal_normal;
+		vec4 decal_orm;
+		vec3 uv_local;
+		if (DECAL_PROCESS(CLUSTER_CELL, i, VERTEX, dFdx(VERTEX), dFdy(VERTEX), NORMAL, uv_local, decal_albedo, decal_normal, decal_orm, decal_emission)) {
+			shade.rgb = mix(shade.rgb, decal_albedo.rgb, decal_albedo.a);
+			lit.rgb = mix(lit.rgb, decal_albedo.rgb, decal_albedo.a);
+			tangentNormal = normalize(mix(tangentNormal, decal_normal.rgb, decal_normal.a));
+			//AO = mix(AO, decal_orm.r, decal_orm.a);
+			ROUGHNESS = mix(ROUGHNESS, decal_orm.g, decal_orm.a);
+			//METALLIC = mix(METALLIC, decal_orm.b, decal_orm.a);
+			emission += decal_emission;
+		}
+	}
+	shade *= GammaToLinearSpace(_ShadeColor);
+	lit *= GammaToLinearSpace(albedo);
+
     // normal
     vec3 viewNormal;
 	if (_NORMALMAP) {
-	    vec3 tangentNormal = UnpackScaleNormal(texture(texture_normal, mainUv), normal_scale);
 	    viewNormal.x = dot(tspace0, tangentNormal);
 	    viewNormal.y = dot(tspace1, tangentNormal);
 	    viewNormal.z = dot(tspace2, tangentNormal);
@@ -233,32 +260,38 @@ void fragment() {
 
     // Unity lighting
 
-	vec3 lightDir;
-    float dotNL;
+	vec3 lightDir = vec3(1.0,0.0,0.0); // mat3(CAMERA_MATRIX) * vec3(0.5,0.86,0.0);
+    float dotNL = 0.0;
 	float lightAttenuation = 1.0;
 	vec3 lightColor = vec3(0.0);
-	if (DIRECTIONAL_LIGHT_COUNT() >= uint(1)) {
-	    //vec3 lightDir = mix(LM_DIRLIGHT(dir_light_direction_attenuation_).xyz, normalize(_WorldSpaceLightPos0.xyz - i.posWorld.xyz), _WorldSpaceLightPos0.w);
-		lightDir = normalize(GET_DIR_LIGHT_DIRECTION(GET_DIRECTIONAL_LIGHT(0)).xyz);
-		//DEBUG_OVERRIDE=vec4(viewNormal,1.0);
+	float dir_light_intensity = 0.0;
+	uint main_dir_light = uint(0);
+	for (uint i = uint(0); i < DIRECTIONAL_LIGHT_COUNT(); i++) {
+		DirectionalLightData ld = GET_DIRECTIONAL_LIGHT(i);
+		if (!SHOULD_RENDER_DIR_LIGHT(ld)) {
+			continue;
+		}
+		vec3 thisLightColor = (GET_DIR_LIGHT_COLOR_SPECULAR(ld).rgb);
+		float this_intensity = max(thisLightColor.r, max(thisLightColor.g, thisLightColor.b));
+		if (this_intensity <= dir_light_intensity + 0.00001) {
+			continue;
+		}
+		dir_light_intensity = this_intensity;
+		main_dir_light = i;
+		lightColor = thisLightColor;
+	}
+	if (dir_light_intensity > 0.0) {
+		DirectionalLightData ld = GET_DIRECTIONAL_LIGHT(main_dir_light);
+		lightDir = normalize(GET_DIR_LIGHT_DIRECTION(ld).xyz);
 		dotNL = dot(lightDir, -viewNormal);
-		//DEBUG_OVERRIDE=vec4(vec3(dotNL),1.0);
-		// TODO: LM_DIRLIGHT(dir_light_color_energy_).w
-	    lightColor = (GET_DIR_LIGHT_COLOR_SPECULAR(GET_DIRECTIONAL_LIGHT(0)).rgb) * 1.0 * step(0.5, length(lightDir)); // length(lightDir) is zero if directional light is disabled.
-		//DEBUG_OVERRIDE = vec4(LM_DIRLIGHT(dir_light_color_energy_).rgb * (1.0 / 3.1415926), 1.0);
-		
-	//#ifndef MTOON_FORWARD_ADD
 	    //UNITY_LIGHT_ATTENUATION(shadowAttenuation, i, posWorld.xyz);
 		vec3 shadow_color = vec3(1.0);
 		float shadow;
 		float transmittance_z = 1.0;
-		DIRECTIONAL_SHADOW_PROCESS(GET_DIRECTIONAL_LIGHT(0), VERTEX, NORMAL, shadow_color, shadow, transmittance_z);
+		DIRECTIONAL_SHADOW_PROCESS(ld, VERTEX, NORMAL, shadow_color, shadow, transmittance_z);
 		//DEBUG_OVERRIDE = vec4(vec3(shadow),1.0);
 		float shadowAttenuation = shadow;//1.0 - shadow;
 	    lightAttenuation = shadowAttenuation * mix(1, shadowAttenuation, _ReceiveShadowRate * texture(_ReceiveShadowTexture, mainUv).r);
-	} else {
-		lightDir = mat3(CAMERA_MATRIX) * vec3(0.5,0.86,0.0);
-		dotNL = dot(lightDir, viewNormal);
 	}
 
 	// Indirect Light
@@ -313,10 +346,6 @@ void fragment() {
     indirectLighting = mix(indirectLighting, max(vec3(EPS_COL), max(indirectLighting.x, max(indirectLighting.y, indirectLighting.z))), _LightColorAttenuation); // color atten
 //#endif
 
-    // Albedo color
-    vec4 shade = GammaToLinearSpace(_ShadeColor) * texture(_ShadeTexture, mainUv);
-    vec4 lit = GammaToLinearSpace(albedo) * mainTex;
-	
 	vec3 col;
 	float lightIntensity;
 	vec3 lighting = calculateLighting(mainUv, dotNL, lightAttenuation, shade, lit, lightColor, col, lightIntensity);
@@ -346,7 +375,6 @@ void fragment() {
     col += mix(matcapLighting, vec3(0, 0, 0), isOutline);
 
     // Emission
-    vec3 emission = texture(_EmissionMap, mainUv).rgb * _EmissionColor.rgb;
     col += mix(emission, vec3(0, 0, 0), isOutline);
 
 	//LightmapCapture lc;
@@ -360,9 +388,14 @@ void fragment() {
 	ClusterData cd = CLUSTER_CELL;
 	if (CALCULATE_LIGHTING_IN_FRAGMENT) {
 
-	    for (uint idx = uint(1); idx < DIRECTIONAL_LIGHT_COUNT(); idx++) {
-
+	    for (uint idx = uint(0); idx < DIRECTIONAL_LIGHT_COUNT(); idx++) {
+			if (idx == main_dir_light) {
+				continue;
+			}
 			DirectionalLightData ld = GET_DIRECTIONAL_LIGHT(idx);
+			if (!SHOULD_RENDER_DIR_LIGHT(ld)) {
+				continue;
+			}
 			vec3 light_rel_vec = GET_DIR_LIGHT_DIRECTION(ld).xyz;
 			vec3 light_color = GET_DIR_LIGHT_COLOR_SPECULAR(ld).rgb;
 			
@@ -385,9 +418,10 @@ void fragment() {
 	    }
 
 	    for (uint idx = uint(0); idx < OMNI_LIGHT_COUNT(CLUSTER_CELL); idx++) {
-			//DirectionalLightData ld = GET_DIRECTIONAL_LIGHT(idx);
-
 			LightData ld = GET_OMNI_LIGHT(cd, idx);
+			if (!SHOULD_RENDER_LIGHT(ld)) {
+				continue;
+			}
 			vec3 light_rel_vec = GET_LIGHT_POSITION(ld).xyz - VERTEX;
 			float atten = GET_OMNI_LIGHT_ATTENUATION_SIZE(ld, VERTEX).x;
 			vec3 light_color = GET_LIGHT_COLOR_SPECULAR(ld).rgb;
@@ -413,6 +447,9 @@ void fragment() {
 
 	    for (uint idx = uint(0); idx < SPOT_LIGHT_COUNT(CLUSTER_CELL); idx++) {
 			LightData ld = GET_SPOT_LIGHT(cd, idx);
+			if (!SHOULD_RENDER_LIGHT(ld)) {
+				continue;
+			}
 			vec3 light_rel_vec = GET_LIGHT_POSITION(ld).xyz - VERTEX;
 			float atten = GET_SPOT_LIGHT_ATTENUATION_SIZE(ld, VERTEX).x;
 			vec3 light_color = GET_LIGHT_COLOR_SPECULAR(ld).rgb;
