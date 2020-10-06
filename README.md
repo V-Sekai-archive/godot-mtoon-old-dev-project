@@ -7,14 +7,14 @@ https://github.com/Santarh/MToon/tree/master/MToon/Resources/Shaders
 
 Provided under the MIT License (see `LICENSE`)
 
-The project opens the "compat" shader for 4.0 compatibility, but this shader
-will not look correct. It's just to provide some simple shading with
-compatible naming.
-
 If you have the NPR lighting patch applied to Godot master (vulkan),
 then please open the Alicia/Alicia.tscn to get the full shader.
 
 Otherwise, open Alicia/AliciaCompat.tscn for the "compatible" version.
+The "compat" shader will not look correct. It's just to provide some
+simple shading with compatible shader param naming.
+
+The reference Unity project is also available, in VRMUnityTestProject.
 
 ## Versions:
 

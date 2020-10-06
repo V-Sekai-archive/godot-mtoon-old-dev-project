@@ -1,1 +1,9 @@
 \.import
+\.godot
+.*\.swp
+VRMUnityTestProject/Library
+VRMUnityTestProject/obj
+VRMUnityTestProject/Temp
+VRMUnityTestProject/.vscode
+VRMUnityTestProject/*.csproj
+VRMUnityTestProject/*.sln
