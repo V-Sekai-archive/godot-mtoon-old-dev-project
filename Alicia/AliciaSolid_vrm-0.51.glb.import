@@ -2,12 +2,12 @@
 
 importer="scene"
 type="PackedScene"
-path="res://.import/AliciaSolid_vrm-0.51.glb-2063d994c47cc0a511cddcf3dd4f071f.scn"
+path="res://.godot/imported/AliciaSolid_vrm-0.51.glb-2063d994c47cc0a511cddcf3dd4f071f.scn"
 
 [deps]
 
 source_file="res://Alicia/AliciaSolid_vrm-0.51.glb"
-dest_files=[ "res://.import/AliciaSolid_vrm-0.51.glb-2063d994c47cc0a511cddcf3dd4f071f.scn" ]
+dest_files=[ "res://.godot/imported/AliciaSolid_vrm-0.51.glb-2063d994c47cc0a511cddcf3dd4f071f.scn" ]
 
 [params]
 

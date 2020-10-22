@@ -16,50 +16,14 @@ roughness = 0.0
 script = null
 
 [node name="DirectionalLight" type="DirectionalLight3D" parent="."]
-transform = Transform( 0.999935, 0.00871642, 0.00731422, -2.09447e-07, -0.642788, 0.766044, 0.0113787, -0.765995, -0.642746, 0, 3, 0 )
+transform = Transform( 1, -5.7545e-07, -2.09447e-07, -2.09447e-07, -0.642788, 0.766044, -5.7545e-07, -0.766044, -0.642788, 0, 3, 0 )
 light_color = Color( 1, 0.956863, 0.839216, 1 )
 shadow_normal_bias = 0.4
 directional_shadow_max_distance = 3.2
 script = null
 
 [node name="AliciaSolid_vrm-051" parent="." instance=ExtResource( 1 )]
-transform = Transform( -1, 0, -3.89414e-07, 0, 1, 0, 3.89414e-07, 0, -1, 0, 0, 0 )
-
-[node name="body_top" parent="AliciaSolid_vrm-051/Root/Skeleton" index="0"]
-extra_cull_margin = 16384.0
-
-[node name="body_under" parent="AliciaSolid_vrm-051/Root/Skeleton" index="1"]
-extra_cull_margin = 16384.0
-
-[node name="cloth" parent="AliciaSolid_vrm-051/Root/Skeleton" index="2"]
-extra_cull_margin = 16384.0
-
-[node name="cloth1" parent="AliciaSolid_vrm-051/Root/Skeleton" index="3"]
-extra_cull_margin = 16384.0
-
-[node name="cloth2" parent="AliciaSolid_vrm-051/Root/Skeleton" index="4"]
-extra_cull_margin = 16384.0
-
-[node name="cloth_ribbon" parent="AliciaSolid_vrm-051/Root/Skeleton" index="5"]
-extra_cull_margin = 16384.0
-
-[node name="eye" parent="AliciaSolid_vrm-051/Root/Skeleton" index="6"]
-extra_cull_margin = 16384.0
-
-[node name="face" parent="AliciaSolid_vrm-051/Root/Skeleton" index="7"]
-extra_cull_margin = 16384.0
-
-[node name="flonthair" parent="AliciaSolid_vrm-051/Root/Skeleton" index="8"]
-extra_cull_margin = 16384.0
-
-[node name="neck" parent="AliciaSolid_vrm-051/Root/Skeleton" index="9"]
-extra_cull_margin = 16384.0
-
-[node name="other" parent="AliciaSolid_vrm-051/Root/Skeleton" index="10"]
-extra_cull_margin = 16384.0
-
-[node name="other02" parent="AliciaSolid_vrm-051/Root/Skeleton" index="11"]
-extra_cull_margin = 16384.0
+transform = Transform( -1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 0, 0, 0 )
 
 [node name="Camera" type="Camera3D" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 1.5 )

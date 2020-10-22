@@ -1,5 +1,6 @@
 shader_type spatial;
-render_mode specular_disabled;
+//render_mode specular_disabled;
+render_mode blend_mix,depth_draw_opaque,cull_back,diffuse_toon,specular_schlick_ggx;
 
 // VARIANTS:
 // DEFAULT_MODE:
@@ -26,34 +27,22 @@ const float isOutline = 0.0;
 // // Uncomment `ALPHA = alpha;` and comment `ALPHA_SCISSOR = _Cutoff` at end of fragment()
 
 // TRANSPARENT_WITH_ZWRITE_CULL_OFF:
-// render_mode cull_disabled,depth_draw_always;
-// // Uncomment `ALPHA = alpha;` and comment `ALPHA_SCISSOR = _Cutoff` at end of fragment()
+render_mode cull_disabled,depth_draw_always;
+// Uncomment `ALPHA = alpha;` and comment `ALPHA_SCISSOR = _Cutoff` at end of fragment()
 
 
 const bool CALCULATE_LIGHTING_IN_FRAGMENT = true;
 
 
-uniform vec4 albedo : hint_color = vec4(1.0,1.0,1.0,1.0);
-uniform sampler2D texture_albedo : hint_albedo;
-uniform vec3 uv1_scale = vec3(1.0,1.0,1.0);
-uniform vec3 uv1_offset;
-//uniform float specular;
-//uniform float metallic;
-//uniform float roughness : hint_range(0,1);
-//uniform float point_size : hint_range(0,128);
-uniform sampler2D texture_normal : hint_normal; // "Normal Texture"
-uniform float normal_scale : hint_range(-16,16);
-
-
 uniform float _EnableAlphaCutout : hint_range(0,1,1) = 0.0;
 uniform float _Cutoff : hint_range(0,1) = 0.5;
-//const vec4 _Color = albedo; // "Lit Texture + Alpha"
+uniform vec4 _Color : hint_color = vec4(1.0,1.0,1.0,1.0); // "Lit Texture + Alpha"
 uniform vec4 _ShadeColor : hint_color = vec4(0.97, 0.81, 0.86, 1); // "Shade Color"
-//const sampler2D _MainTex = texture_albedo;
-//uniform vec4 _MainTex_ST;
+uniform sampler2D _MainTex : hint_albedo;
+uniform vec4 _MainTex_ST = vec4(1.0,1.0,0.0,0.0);
 uniform sampler2D _ShadeTexture : hint_albedo;
-//uniform float _BumpScale = 1.0; // "Normal Scale"
-//uniform sampler2D _BumpMap : hint_normal; // "Normal Texture"
+uniform float _BumpScale : hint_range(-16,16) = 1.0; // "Normal Scale"
+uniform sampler2D _BumpMap : hint_normal; // "Normal Texture"
 uniform sampler2D _ReceiveShadowTexture : hint_white;
 uniform float _ReceiveShadowRate = 1.0; // "Receive Shadow"
 uniform sampler2D _ShadingGradeTexture : hint_white;
@@ -75,7 +64,7 @@ uniform sampler2D _EmissionMap : hint_albedo;
 uniform sampler2D _OutlineWidthTexture : hint_white;
 uniform float _OutlineWidth : hint_range(0.01, 1.0) = 0.5;
 uniform float _OutlineScaledMaxDistance : hint_range(1,10) = 1;
-uniform float _OutlineMixedLighting : hint_range(0,1,1);
+uniform float _OutlineColorMode : hint_range(0,1,1);
 uniform vec4 _OutlineColor : hint_color = vec4(0,0,0,1);
 uniform float _OutlineLightingMix : hint_range(0,1) = 0;
 uniform sampler2D _UvAnimMaskTexture : hint_white;
@@ -98,7 +87,7 @@ varying vec3 tspace2; // : TEXCOORD3;
 
 
 void vertex() {
-	UV=UV*uv1_scale.xy+uv1_offset.xy;
+	UV=UV*_MainTex_ST.xy+_MainTex_ST.zw;
 	COLOR=COLOR;
 
 	if (isOutline == 1.0) {
@@ -178,11 +167,15 @@ vec3 calculateAddLighting(vec2 mainUv, float dotNL, float dotNV, float shadowAtt
     col += mix(rim * rimLighting, vec3(0.0), isOutline);
 	return col;
 }
-
+float SchlickFresnel(float u) {
+	float m = 1.0 - u;
+	float m2 = m * m;
+	return m2 * m2 * m; // pow(m,5)
+}
 void fragment() {
-	bool _NORMALMAP = true;//textureSize(texture_normal, 0).x > 8;
-	bool MTOON_OUTLINE_COLOR_FIXED = _OutlineMixedLighting == 0.0;
-	bool MTOON_OUTLINE_COLOR_MIXED = _OutlineMixedLighting == 1.0;
+	bool _NORMALMAP = textureSize(_BumpMap, 0).x > 8;
+	bool MTOON_OUTLINE_COLOR_FIXED = _OutlineColorMode == 0.0;
+	bool MTOON_OUTLINE_COLOR_MIXED = _OutlineColorMode == 1.0;
 
     // uv
     vec2 mainUv = UV; //TRANSFORM_TEX(i.uv0, _MainTex);
@@ -197,15 +190,15 @@ void fragment() {
     mainUv = mat2(vec2(cos(rotateRad), -sin(rotateRad)), vec2(-sin(rotateRad), cos(rotateRad))) * (mainUv - rotatePivot) + rotatePivot;
     
     // main tex
-    vec4 mainTex = texture(texture_albedo, mainUv);
+    vec4 mainTex = texture(_MainTex, mainUv);
     vec4 DEBUG_OVERRIDE = vec4(0.0);
     // alpha
-	float alpha = albedo.a * mainTex.a;
+	float alpha = _Color.a * mainTex.a;
  
     // normal
     vec3 viewNormal;
 	if (_NORMALMAP) {
-	    vec3 tangentNormal = UnpackScaleNormal(texture(texture_normal, mainUv), normal_scale);
+	    vec3 tangentNormal = UnpackScaleNormal(texture(_BumpMap, mainUv), _BumpScale);
 	    viewNormal.x = dot(tspace0, tangentNormal);
 	    viewNormal.y = dot(tspace1, tangentNormal);
 	    viewNormal.z = dot(tspace2, tangentNormal);
@@ -225,9 +218,11 @@ void fragment() {
 
     // Albedo color
     vec4 shade = _ShadeColor * texture(_ShadeTexture, mainUv);
-    vec4 lit = albedo * mainTex;
-	
-	vec3 col;
+    vec4 lit = _Color * mainTex;
+
+    shade = min(shade, lit); ///// Mimic look of non-PBR min() clamp we commented out below.
+
+	vec3 col = vec3(0.0);
 	float lightIntensity = 1.0;
 
    
@@ -271,30 +266,19 @@ void fragment() {
 		col = vec3(0.0);
 	}
 
-    EMISSION = rimEmission; //mix(col.rgb, DEBUG_OVERRIDE.rgb, DEBUG_OVERRIDE.a);
+    EMISSION = mix(col.rgb, DEBUG_OVERRIDE.rgb, DEBUG_OVERRIDE.a);
 
     ALBEDO = lit.rgb;//vec3(0.0);
-	SPECULAR = 1.0;
+	SPECULAR = 0.0;
 	ROUGHNESS = 0.0;
 	METALLIC = 0.0;
 	ALPHA = alpha;
-	//ALPHA_SCISSOR = _Cutoff;
-
-	//METALLIC = metallic;
-	//ROUGHNESS = roughness;
-	//SPECULAR = specular;
-}
-
-float SchlickFresnel(float u) {
-	float m = 1.0 - u;
-	float m2 = m * m;
-	return m2 * m2 * m; // pow(m,5)
+	//if (_EnableAlphaCutout == 1.0 && alpha < _Cutoff) { discard;  } // ALPHA_SCISSOR = _Cutoff;
 }
 
 void light() {
     // uv
     vec2 mainUv = UV; //TRANSFORM_TEX(i.uv0, _MainTex);
-    
     // uv anim
     float uvAnim = texture(_UvAnimMaskTexture, mainUv).r * TIME;
     // translate uv in bottom-left origin coordinates.
@@ -305,15 +289,15 @@ void light() {
     mainUv = mat2(vec2(cos(rotateRad), sin(rotateRad)), vec2(-sin(rotateRad), cos(rotateRad))) * (mainUv - rotatePivot) + rotatePivot;
 
 	float addDotNL = dot(NORMAL, LIGHT);
-    vec4 mainTex = texture(texture_albedo, mainUv);
+    vec4 mainTex = texture(_MainTex, mainUv);
     vec4 shade = _ShadeColor * texture(_ShadeTexture, mainUv);
-   	vec4 lit = albedo * mainTex;
+   	vec4 lit = _Color * mainTex;
 
 	vec3 addCol = vec3(0.0);
 	float addTmp;
 	vec3 addLighting = calculateLighting(mainUv, addDotNL, 1.0, shade, lit, LIGHT_COLOR, addCol, addTmp);
 	// addLighting *= step(0, addDotNL); // darken if transparent. Because Unity's transparent material can't receive shadowAttenuation.
-	DIFFUSE_LIGHT += calculateAddLighting(mainUv, addDotNL, dot(NORMAL, VIEW), ATTENUATION, addLighting, addCol);
+	DIFFUSE_LIGHT += calculateAddLighting(mainUv, addDotNL, dot(NORMAL, VIEW), length(vec3(ATTENUATION))/sqrt(3.0), addLighting, addCol);
 
     SPECULAR_LIGHT = vec3(0.0);
 }

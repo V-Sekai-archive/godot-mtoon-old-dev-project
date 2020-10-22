@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode specular_disabled,ambient_light_disabled;
+//render_mode specular_disabled,ambient_light_disabled;
 
 // VARIANTS:
 // DEFAULT_MODE:
@@ -12,7 +12,7 @@ const float isOutline = 1.0;
 // Uncomment `ALPHA = alpha;` and comment `if (alpha < _Cutoff) { discard; }` at end of fragment()
 
 // TRANSPARENT:
-// // Uncomment `ALPHA = alpha;` and comment `if (alpha < _Cutoff) { discard; }` at end of fragment()
+// Uncomment `ALPHA = alpha;` and comment `if (alpha < _Cutoff) { discard; }` at end of fragment()
 
 // TRANSPARENT_WITH_ZWRITE:
 //render_mode depth_draw_always;
@@ -33,50 +33,38 @@ const float isOutline = 1.0;
 const bool CALCULATE_LIGHTING_IN_FRAGMENT = true;
 
 
-uniform vec4 albedo : hint_color = vec4(1.0,1.0,1.0,1.0);
-uniform sampler2D texture_albedo : hint_albedo;
-uniform vec3 uv1_scale = vec3(1.0,1.0,1.0);
-uniform vec3 uv1_offset;
-//uniform float specular;
-//uniform float metallic;
-//uniform float roughness : hint_range(0,1);
-//uniform float point_size : hint_range(0,128);
-uniform sampler2D texture_normal : hint_normal; // \"Normal Texture\"
-uniform float normal_scale : hint_range(-16,16);
-
-
 uniform float _EnableAlphaCutout : hint_range(0,1,1) = 0.0;
 uniform float _Cutoff : hint_range(0,1) = 0.5;
-//const vec4 _Color = albedo; // \"Lit Texture + Alpha\"
-uniform vec4 _ShadeColor : hint_color = vec4(0.97, 0.81, 0.86, 1); // \"Shade Color\"
-//const sampler2D _MainTex = texture_albedo;
-//uniform vec4 _MainTex_ST;
+uniform vec4 _Color /*: hint_color*/ = vec4(1.0,1.0,1.0,1.0); // "Lit Texture + Alpha"
+uniform vec4 _ShadeColor /*: hint_color*/ = vec4(0.97, 0.81, 0.86, 1); // "Shade Color"
+uniform sampler2D _MainTex : hint_albedo;
+uniform vec4 _MainTex_ST = vec4(1.0,1.0,0.0,0.0);
 uniform sampler2D _ShadeTexture : hint_albedo;
-//uniform float _BumpScale = 1.0; // \"Normal Scale\"
-//uniform sampler2D _BumpMap : hint_normal; // \"Normal Texture\"
+uniform float _BumpScale : hint_range(-16,16) = 1.0; // "Normal Scale"
+uniform sampler2D _BumpMap : hint_normal; // "Normal Texture"
 uniform sampler2D _ReceiveShadowTexture : hint_white;
-uniform float _ReceiveShadowRate = 1.0; // \"Receive Shadow\"
+uniform float _ReceiveShadowRate = 1.0; // "Receive Shadow"
 uniform sampler2D _ShadingGradeTexture : hint_white;
-uniform float _ShadingGradeRate = 1.0; // \"Shading Grade\"
+uniform float _ShadingGradeRate = 1.0; // "Shading Grade"
 uniform float _ShadeShift : hint_range(-1.0, 1.0) = 0.0;
 uniform float _ShadeToony : hint_range(0.0, 1.0) = 0.9;
 uniform float _LightColorAttenuation : hint_range(0.0, 1.0) = 0.0;
 uniform float _IndirectLightIntensity : hint_range(0.0, 1.0) = 0.1;
 uniform sampler2D _RimTexture : hint_albedo;
-uniform vec4 _RimColor : hint_color = vec4(0,0,0,1);
+uniform vec4 _RimColor /*: hint_color*/ = vec4(0,0,0,1);
 uniform float _RimLightingMix : hint_range(0.0, 1.0) = 0.0;
 uniform float _RimFresnelPower : hint_range(0.0, 100.0) = 1.0;
 uniform float _RimLift : hint_range(0.0, 1.0) = 0.0;
-uniform sampler2D _SphereAdd : hint_black_albedo; // \"Sphere Texture(Add)\"
-uniform vec4 _EmissionColor : hint_color = vec4(0,0,0,1); // \"Color\"
+uniform sampler2D _SphereAdd : hint_black_albedo; // "Sphere Texture(Add)"
+uniform vec4 _EmissionColor /*: hint_color*/ = vec4(0,0,0,1); // "Color"
 uniform sampler2D _EmissionMap : hint_albedo;
 // Not implemented:
 // uniform float _OutlineWidthScreenCoordinates : hint_range(0,1,1);
 uniform sampler2D _OutlineWidthTexture : hint_white;
 uniform float _OutlineWidth : hint_range(0.01, 1.0) = 0.5;
 uniform float _OutlineScaledMaxDistance : hint_range(1,10) = 1;
-uniform float _OutlineMixedLighting : hint_range(0,1,1);
-uniform vec4 _OutlineColor : hint_color = vec4(0,0,0,1);
+uniform float _OutlineColorMode : hint_range(0,1,1);
+uniform vec4 _OutlineColor /*: hint_color*/ = vec4(0,0,0,1);
 uniform float _OutlineLightingMix : hint_range(0,1) = 0;
 uniform sampler2D _UvAnimMaskTexture : hint_white;
 uniform float _UvAnimScrollX = 0;
@@ -98,7 +86,7 @@ varying vec3 tspace2; // : TEXCOORD3;
 
 
 void vertex() {
-	UV=UV*uv1_scale.xy+uv1_offset.xy;
+	UV=UV*_MainTex_ST.xy+_MainTex_ST.zw;
 	COLOR=COLOR;
 
 	if (isOutline == 1.0) {
@@ -192,9 +180,9 @@ vec4 GammaToLinearSpace (vec4 sRGB)
     return vec4(sRGB.rgb * (sRGB.rgb * (sRGB.rgb * 0.305306011 + 0.682171111) + 0.012522878), sRGB.a);
 }
 void fragment() {
-	bool _NORMALMAP = true; //textureSize(texture_normal, 0).x > 8;
-	bool MTOON_OUTLINE_COLOR_FIXED = _OutlineMixedLighting == 0.0;
-	bool MTOON_OUTLINE_COLOR_MIXED = _OutlineMixedLighting == 1.0;
+	bool _NORMALMAP = textureSize(_BumpMap, 0).x > 8;
+	bool MTOON_OUTLINE_COLOR_FIXED = _OutlineColorMode == 0.0;
+	bool MTOON_OUTLINE_COLOR_MIXED = _OutlineColorMode == 1.0;
 
 	ROUGHNESS = 1.0; // for now
 	SPECULAR = 0.0; // for now
@@ -211,10 +199,10 @@ void fragment() {
     mainUv = mat2(vec2(cos(rotateRad), -sin(rotateRad)), vec2(-sin(rotateRad), cos(rotateRad))) * (mainUv - rotatePivot) + rotatePivot;
     
     // main tex
-    vec4 mainTex = texture(texture_albedo, mainUv);
+    vec4 mainTex = texture(_MainTex, mainUv);
     vec4 DEBUG_OVERRIDE = vec4(0.0);
     // alpha
-	float alpha = albedo.a * mainTex.a;
+	float alpha = _Color.a * mainTex.a;
      // Albedo color
     vec4 shade = texture(_ShadeTexture, mainUv);
     vec4 lit = mainTex;
@@ -222,7 +210,7 @@ void fragment() {
 
 	vec3 tangentNormal = vec3(0.0,0.0,1.0);
 	if (_NORMALMAP) {
-	    vec3 tangentNormal = UnpackScaleNormal(texture(texture_normal, mainUv), normal_scale);
+	    tangentNormal = UnpackScaleNormal(texture(_BumpMap, mainUv), _BumpScale);
 	}
 
 	for (uint i = uint(0); i < DECAL_COUNT(CLUSTER_CELL); i++) {
@@ -242,7 +230,9 @@ void fragment() {
 		}
 	}
 	shade *= GammaToLinearSpace(_ShadeColor);
-	lit *= GammaToLinearSpace(albedo);
+	lit *= GammaToLinearSpace(_Color);
+
+    shade = min(shade, lit); ///// Mimic look of non-PBR min() clamp we commented out below.
 
     // normal
     vec3 viewNormal;
@@ -566,9 +556,9 @@ void light() {
 		*/
 		if (!CALCULATE_LIGHTING_IN_FRAGMENT) {
 			float addDotNL = dot(NORMAL, LIGHT);
-		    vec4 mainTex = texture(texture_albedo, mainUv);
+		    vec4 mainTex = texture(_MainTex, mainUv);
 		    vec4 shade = _ShadeColor * texture(_ShadeTexture, mainUv);
-	    	vec4 lit = albedo * mainTex;
+	    	vec4 lit = _Color * mainTex;
 
 			vec3 addCol = vec3(0.0);
 			float addTmp;
