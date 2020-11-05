@@ -211,21 +211,6 @@ void fragment() {
 	    tangentNormal = UnpackScaleNormal(texture(_BumpMap, mainUv), _BumpScale);
 	}
 
-	{
-		float ao;
-		float metallic;
-		float tmp;
-		vec3 tmp3;
-		vec3 tmpNormal = tangentNormal;
-		vec3 shade3 = shade.rgb;
-		float roughness = ROUGHNESS;
-		APPLY_DECALS(VERTEX, tangentNormal, shade3, emission, ao, roughness, metallic);
-		ROUGHNESS = roughness;
-		shade.rgb = shade3;
-		vec3 lit3 = lit.rgb;
-		APPLY_DECALS(VERTEX, tmpNormal, lit3, tmp3, ao, tmp, metallic);
-		lit.rgb = lit3;
-	}
 	shade *= GammaToLinearSpace(_ShadeColor);
 	lit *= GammaToLinearSpace(_Color);
 
@@ -251,20 +236,17 @@ void fragment() {
 	vec3 up_normal = mat3(INV_CAMERA_MATRIX) * vec3(0.0,1.0,0.0);
 
 	vec3 ambient_light_up;
-	vec3 diffuse_light_up;
 	vec3 specular_light_up;
-	AMBIENT_PROCESS(VERTEX, up_normal, ROUGHNESS, SPECULAR, 0.0, vec2(0.0), vec4(0.0), vec4(0.0), ambient_light_up, diffuse_light_up, specular_light_up);
+	godot_sample_ambient(VERTEX, up_normal, ROUGHNESS, SPECULAR, 0.0, vec2(0.0), vec4(0.0), vec4(0.0), ambient_light_up, specular_light_up);
 
 	vec3 ambient_light_down;
-	vec3 diffuse_light_down;
 	vec3 specular_light_down;
-	AMBIENT_PROCESS(VERTEX, -up_normal, ROUGHNESS, SPECULAR, 0.0, vec2(0.0), vec4(0.0), vec4(0.0), ambient_light_down, diffuse_light_down, specular_light_down);
+	godot_sample_ambient(VERTEX, -up_normal, ROUGHNESS, SPECULAR, 0.0, vec2(0.0), vec4(0.0), vec4(0.0), ambient_light_down, specular_light_down);
 	vec3 toonedGI = (ambient_light_up + ambient_light_down) * 0.5;
 
 	vec3 ambient_light;
-	vec3 diffuse_light;
 	vec3 specular_light;
-	AMBIENT_PROCESS(VERTEX, NORMAL, ROUGHNESS, SPECULAR, 0.0, vec2(0.0), vec4(0.0), vec4(0.0), ambient_light, diffuse_light, specular_light);
+	godot_sample_ambient(VERTEX, NORMAL, ROUGHNESS, SPECULAR, 0.0, vec2(0.0), vec4(0.0), vec4(0.0), ambient_light, specular_light);
 
     // Emission
     EMISSION = mix(emission, vec3(0, 0, 0), isOutline);
@@ -320,9 +302,9 @@ void fragment() {
 		if (MTOON_OUTLINE_COLOR_FIXED) {
 			DIFFUSE_LIGHT = vec3(0.0);
 			SPECULAR_LIGHT = vec3(0.0);
-			EMISSION = _OutlineColor.rgb;
+			EMISSION = GammaToLinearSpace(_OutlineColor).rgb;
 		} else if (MTOON_OUTLINE_COLOR_MIXED) {
-			EMISSION = _OutlineColor.rgb * (1.0 - _OutlineLightingMix);
+			EMISSION = GammaToLinearSpace(_OutlineColor).rgb * (1.0 - _OutlineLightingMix);
 			// ALBEDO *= _OutlineLightingMix;
 			DIFFUSE_LIGHT *= _OutlineLightingMix;
 			SPECULAR_LIGHT *= _OutlineLightingMix;
@@ -350,7 +332,7 @@ void fragment() {
 	ROUGHNESS = 1.0;
 	METALLIC = 0.0;
 	ALPHA = alpha;
-	//if (alpha < _Cutoff) { discard; }
+	// if (alpha < _Cutoff) { discard; }
 
 
 	//METALLIC = metallic;
@@ -384,10 +366,13 @@ void light() {
 	lit *= GammaToLinearSpace(_Color);
 
 	if (isOutline == 1.0) {
+		bool MTOON_OUTLINE_COLOR_FIXED = _OutlineColorMode == 0.0;
 		bool MTOON_OUTLINE_COLOR_MIXED = _OutlineColorMode == 1.0;
-		if (MTOON_OUTLINE_COLOR_MIXED) {
-			shade.rgb = _OutlineColor.rgb * _OutlineLightingMix;
-			lit.rgb = _OutlineColor.rgb * _OutlineLightingMix;
+		if (MTOON_OUTLINE_COLOR_FIXED) {
+			return;
+		} else if (MTOON_OUTLINE_COLOR_MIXED) {
+			shade.rgb = GammaToLinearSpace(_OutlineColor).rgb * _OutlineLightingMix;
+			lit.rgb = GammaToLinearSpace(_OutlineColor).rgb * _OutlineLightingMix;
 		}
 	}
 	if (_DebugMode >= 1.0) {
@@ -402,7 +387,7 @@ void light() {
 		vec3 indirectLight = ALBEDO;
 	    //UNITY_LIGHT_ATTENUATION(shadowAttenuation, i, posWorld.xyz);
 		// FIXME: Removed duplicate SHADOW_ATTENUATION* multiplier.
-	    float lightAttenuation = mix(1.0, SHADOW_ATTENUATION, _ReceiveShadowRate * texture(_ReceiveShadowTexture, mainUv).r);
+	    float lightAttenuation = mix(1.0, length(vec3(SHADOW_ATTENUATION))/length(vec3(1.0)), _ReceiveShadowRate * texture(_ReceiveShadowTexture, mainUv).r);
 
 		vec3 col;
 		lighting = calculateLighting(mainUv, addDotNL, lightAttenuation, shade, lit, LIGHT_COLOR, col, lightIntensity);
@@ -428,7 +413,7 @@ void light() {
 		vec3 addLighting = calculateLighting(mainUv, addDotNL, 1.0, shade, lit, LIGHT_COLOR, addCol, addTmp);
 		vec3 specLight;
 		// addLighting *= step(0, addDotNL); // darken if transparent. Because Unity's transparent material can't receive shadowAttenuation.
-		DIFFUSE_LIGHT += PROJECTOR_COLOR * calculateAddLighting(mainUv, addDotNL, dot(NORMAL, VIEW), length(vec3(ATTENUATION*SHADOW_ATTENUATION))/length(vec3(1.0)), addLighting, addCol, specLight);
+		DIFFUSE_LIGHT += calculateAddLighting(mainUv, addDotNL, dot(NORMAL, VIEW), length(vec3(ATTENUATION*SHADOW_ATTENUATION))/length(vec3(1.0)), addLighting, addCol, specLight);
 		SPECULAR_LIGHT += specLight;
 	}
 	if (_DebugMode >= 1.0) {
