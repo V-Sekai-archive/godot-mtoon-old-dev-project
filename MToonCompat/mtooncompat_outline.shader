@@ -64,7 +64,7 @@ uniform sampler2D _EmissionMap : hint_albedo;
 uniform sampler2D _OutlineWidthTexture : hint_white;
 uniform float _OutlineWidth : hint_range(0.01, 1.0) = 0.5;
 uniform float _OutlineScaledMaxDistance : hint_range(1,10) = 1;
-uniform float _OutlineColorMode : hint_range(0,1,1) = 0 = 0;
+uniform float _OutlineColorMode : hint_range(0,1,1) = 0;
 uniform vec4 _OutlineColor /* : hint_color */ = vec4(0,0,0,1);
 uniform float _OutlineLightingMix : hint_range(0,1) = 0;
 uniform sampler2D _UvAnimMaskTexture : hint_white;
