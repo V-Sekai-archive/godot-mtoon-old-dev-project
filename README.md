@@ -1,4 +1,9 @@
-# MToon for Godot.
+# DEPRECATED PROJECT MToon for Godot.
+
+## [THIS PROJECT IS DEPRECATED. PLEASE USE godot-vrm FOR FUTURE UPDATES.](https://github.com/V-Sekai/godot-vrm)
+
+## What is MToon?
+
 For use with VRM and as a basis for toon shaded models.
 
 Based off the original MToon by Santarh at:
@@ -32,6 +37,8 @@ VRM import also requires custom modules, available from the `groups` branch here
 https://github.com/V-Sekai/godot-modules-groups
 
 ## Versions:
+
+This is mostly historical. Current versions do not use any engine patches.
 
 ### Godot-MToon-Shader and Alicia/Alicia.tscn (Supports Godot 3.2 and 4.x with engine patch)
 
