@@ -1,4 +1,9 @@
-# MToon for Godot.
+# DEPRECATED PROJECT MToon for Godot.
+
+## [THIS PROJECT IS DEPRECATED. PLEASE USE godot-vrm FOR FUTURE UPDATES.](https://github.com/V-Sekai/godot-vrm)
+
+## What is MToon?
+
 For use with VRM and as a basis for toon shaded models.
 
 Based off the original MToon by Santarh at:
@@ -7,57 +12,59 @@ https://github.com/Santarh/MToon/tree/master/MToon/Resources/Shaders
 
 Provided under the MIT License (see `LICENSE`)
 
+If you have the NPR lighting patch applied to Godot master (vulkan),
+then please open the Alicia/Alicia.tscn to get the full shader.
+
+Otherwise, open Alicia/AliciaCompat.tscn for the "compatible" version.
+The "compat" shader will not look correct. It's just to provide some
+simple shading with compatible shader param naming.
+
+The reference Unity project is also available, in VRMUnityTestProject.
+
+
+## Importing VRM Files to use this shader:
+
+VRM importer is available here:
+
+https://github.com/V-Sekai/godot-vrm
+
+To use the VRM Importer, it is recommended to be on the `groups` branch of this repository:
+
+https://github.com/V-Sekai/godot
+
+VRM import also requires custom modules, available from the `groups` branch here:
+
+https://github.com/V-Sekai/godot-modules-groups
+
 ## Versions:
 
-### Godot-MToon-Shader (For Godot 3.2.2 - 4.0 ONLY)
+This is mostly historical. Current versions do not use any engine patches.
 
-This version uses special GLSL macros defined in `custom_defines` (see DANGER below)
-to provide the exact information needed to replicate the MToon look from Unity.
+### Godot-MToon-Shader and Alicia/Alicia.tscn (Supports Godot 3.2 and 4.x with engine patch)
+
+**(Requires adding shader language extensions to expose lighting information in fragment)**
+
+This should be fully compatbile with MToon and implement proper ambient lighting.
 
 This shader should look identical to MToon in Unity. (NOTE: this test scene uses
 realtime Omni and Spot lights, which are not compatible due to different falloff
 curves. However, directional lights and ambient should look the same.)
 ![](docs/alicia_realtime_lights.png)
 
-NOTE: This shader ONLY supports Godot 3.2.2 or later, and only GLES3!
+#### Applying custom engine patches
 
-This shader will not work in Godot versions 3.2.1 or earlier; or master / 4.0.
+The branch for 3.2 is available at: https://github.com/lyuma/godot/tree/shader_npr_lighting_3.2
 
-#### DANGER: Project corruption godot bug
+The branch for 4.0 is available at: https://github.com/lyuma/godot/tree/shader_npr_lighting
 
-**NOTE: IMPORTING THIS SHADER WILL MODIFY YOUR PROJECT AND MAY INFECT OTHER .tres
-OR .tscn ASSETS WHICH CONTAIN SHADERS. MAKE A BACKUP BEFORE IMPORTING.**
+The 4.x Pull Request based of this branch is available at godotengine/godot#42599
 
-This shader will globally override the *maximum number of bones* allowed on a model.
-Additionally, it will override the *maximum number of realtime lights* in a scene.
-The numbers chosen are at the top of the `custom_defines` section, but they are
-hardware dependent, so avoid making these too high. This is again due to unintended
-use of a Godot feature, and mixing up global constants with per-shader defines.
-
-This is due to a Godot bug (TODO: file bug) which causes `custom_defines` to modify the
-global `spatial` or `canvas_item` shader objects in the engine, which are copied to newly
-created shader resources.
-
-If something goes wrong, be prepared to search all project assets within `.tres` or
-`.tscn` textual files for `custom_shaders = ` lines and remove them.
-
-As long as care is taken, this should be safe to import. But note that this shader
-is using UNSUPPORTED behaviour of the Godot engine, and comes at NO WARRANTY.
-The features may break at any time, and is more a preview of future tech than something
-to use in a production project.
-
-#### Uninstallation steps
-
-**TO UNINSTALL THIS SHADER, YOU MUST REMOVE `custom_defines` FROM ALL ASSETS IN YOUR PROJECT**
-
-You must use grep or another program to find all assets with `custom_defines`.
-
-### MToonCompat-For-Godot-Master
+### MToonCompat and AliciaCompat/AliciaCompat.tscn (For any Godot version)
 
 **(Compatible with all Godot versions, but with incorrect ambient and directional lighting)**
 
 This shader uses the same naming as MToon, and it should work in all versions of Godot.
-However, proper toon shading is not possible without use of GLSL macros.
+However, proper toon shading is not possible without engine modifications.
 
 The compat shader may provide a PBR look:
 ![](docs/alicia_compat.png)
@@ -66,7 +73,25 @@ While not the intent of MToon, this version exists to allow for compatibility
 across all Godot versions, while still using the same MToon shader params so that
 import and assets will be compatible.
 
+Note about shadows: The compat shader has ommitted multiplying with
+`length(SHADOW_ATTENUATION)/sqrt(3)` which is required to get shadow support in Godot 4.
+I have omitted this variable for 3.2 compatability.
+
 This version will be needed until proper NPR support is implemented in Godot.
+
+See our proposal here:
+https://github.com/godotengine/godot-proposals/issues/1620
+
+### Historical versions:
+
+There is an old branch `old-3.2-hack` which is done using a hacky feature added only to Godot 3.2.2
+The particular implementation is also only compatible with NVIDIA, due to nuances about preprocessor support.
+
+Additionally, using the version in the `old-3.2-hack` branch may corrupt other assets in your project
+due to a bug with the aformentioned hacky feature "`custom_defines`" available only in Godot 3.2.x
+
+Given these caveats, it is not advisable to use this version. However, I am making a note in case it
+is of interest for historical reasons, or for reference.
 
 ## Notes on usage:
 
@@ -108,7 +133,6 @@ You can uncomment it if you desire the original (clamped directional light) beha
 
 ## TODO:
 
-- Port this shader to Godot 4.0
 - File PRs and issues against Godot 4.0 so that this can be done without GLSL macros.
 - Test all baked lighting / voxel GI variants in Godot.
 
@@ -120,4 +144,6 @@ dependent and I had difficulty ascertaining the intent of the original code.
   using the Raw checkbox, but these colors will be **GAMMA CORRECTED** even in raw mode,
   due to a limitation in Godot. To compare, I suggest adding `[HDR][GAMMA]` in the Unity
   shader, or else remove `[HDR]` which also puts the colors into Gamma mode.
-  In practice, a Gamma conversion calculator must be used when convering colors.
+  In practice, a Gamma conversion calculator must be used when converting colors.
+- For now, shaders have been updated to use `Plane` selectors instead of `Color` pickers,
+  to avoid HDR compatibility between 3.2 and 4.x until this issue is resolved.

@@ -8,15 +8,19 @@
 
 config_version=4
 
-_global_script_classes=[  ]
+_global_script_classes=[ {
+"base": "StreamTexture",
+"class": "StreamTexture2D",
+"language": "GDScript",
+"path": "res://StreamTexture2D.gd"
+} ]
 _global_script_class_icons={
-
+"StreamTexture2D": ""
 }
 
 [application]
 
 config/name="ShaderTest"
-run/main_scene="res://Alicia/Aicia.tscn"
 
 [editor_plugins]
 
